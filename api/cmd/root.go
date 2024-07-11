@@ -96,9 +96,11 @@ func etcdConnectionChecker() context.CancelFunc {
 
 	go func() {
 		etcdClient := storage.GenEtcdStorage().GetClient()
+		ticker := time.NewTicker(10 * time.Second)
+		defer ticker.Stop()
 		for {
 			select {
-			case <-time.Tick(10 * time.Second):
+			case <-ticker.C:
 				sCtx, sCancel := context.WithTimeout(ctx, 5*time.Second)
 				err := etcdClient.Sync(sCtx)
 				sCancel()
@@ -132,9 +134,11 @@ func etcdConnectionChecker() context.CancelFunc {
 
 	// Timed re-initialization when etcd watch actively exits
 	go func() {
+                ticker := time.NewTicker(2 * time.Minute)
+                defer ticker.Stop()
 		for {
 			select {
-			case <-time.Tick(2 * time.Minute):
+			case <-ticker.C:
 				err := store.ReInit()
 				if err != nil {
 					log.Errorf("resource re-initialize failed, err: %v", err)
